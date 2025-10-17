@@ -1,0 +1,261 @@
+﻿Project: Secure_logger_controller
+
+Designed: Juan Carlos Aquino Hernandez
+Email: juancarlos.aquino@utnay.edu.mx
+Overview
+
+This project proposes a low-power, secure Medical Event Logger SoC built on the Caravel platform, integrating non-volatile ReRAM memory (NVM) from BM Labs.
+The goal is to provide persistent medical data storage directly at the edge (wearable devices, portable sensors), ensuring data integrity and reliability even under power loss conditions.
+Motivation
+In medical environments, data reliability and persistence are critical.
+Typical SRAM or DRAM lose information when power is interrupted, and Flash-based memories consume high energy for writes.
+By leveraging ReRAM NVM, our design enables:
+• Energy-efficient persistent logging of vital signs (ECG, heart rate, blood oxygen).
+• Data retention without standby power, increasing device autonomy.
+
+
+
+
+
+
+
+
+Architecture
+
+The SoC is built on the Caravel SoC user area with the following blocks:
+• RISC-V Core (Caravel CPU): Controls logging operations and communication.
+• ReRAM NVM IP (BM Labs): Stores event logs (sensor readings, alerts).
+• Wishbone Bus Integration: ReRAM memory mapped into the system bus.
+• GPIO/Logic Analyzer: External interface for debugging and signal capture.
+• Secure Data Logger Module: Custom controller for managing ReRAM writes and reads.
+• proved safety and reliability in wearable medical devices.
+Key Features
+• Non-volatile medical data logging with ReRAM.
+• Energy efficiency for wearable and portable devices.
+• Fault-tolerant storage (data survives power failures).
+• Simple communication via Caravel GPIO/Wishbone bus.
+
+
+Project Objective
+
+Implement a data acquisition system from a digital sensor (8 bits), which temporarily stores data in a FIFO and securely writes it to ReRAM memory. The system is capable of:
+
+Detecting power failures (power_fail_detected)
+
+Activating a fail-safe protection mode
+
+Communicating with an external microcontroller via the Wishbone bus
+
+Exposing itself in a Caravel/OpenLane environment for tapeout
++-----------------------------------------------------------+
+|                  user_project_wrapper                     |
+|                                                           |
+| +------------------------+       +---------------------+  |
+| | logger_wb_controller   | ----> |   caravel_top       |  |
+| +------------------------+       |                     |  |
+|                                  | +-----------------+ |  |
+|                                  | | secure_logger   | |  |
+|                                  | +-----------------+ |  |
+|                                  | +---------------+   |  |
+|                                  | | re_ram_nvm    |   |  |
+|                                  | +---------------+   |  |
+|                                  +---------------------+  |
++-----------------------------------------------------------+
+
+Components and Functionality
+1. user_project_wrapper
+
+This is the top-level module that connects:
+
+Wishbone interface for external control (via SoC or testbench)
+
+Digital inputs/outputs (io_in, io_out)
+
+Diagnostic outputs (done_logging, fail_safe)
+
+Connects start_logging from Wishbone to the central system (caravel_top).
+Implementa el protocolo Wishbone Slave.
+
+Permite iniciar la captura de datos escribiendo 1 en una dirección (registro de control).
+
+Entrega la señal start_logging (pulso de un solo ciclo).
+
+
+
+
+
+
+Mapped address:
+
+
+0x00: Control register (start_logging)
+caravel_top
+
+Integration module containing the core logic.
+
+Connects to:
+
+Digital sensor (8-bit)
+
+Bidirectional bus to ReRAM memory
+
+Power failure signal
+    Compuesto por:
+
+        
+secure_logger_controller: FSM that controls capture/bufferization/writing
+
+re_ram_nvm: Simulated ReRAM-like memory
+caravel_top
+
+Integration module that contains the core logic.
+
+Connects to:
+
+Digital sensor (8-bit)
+
+Bidirectional bus to ReRAM memory
+
+Power failure signal
+
+Composed of:
+
+secure_logger_controller: FSM that controls capture/bufferization/writing
+
+re_ram_nvm: Simulated ReRAM-like memory
+secure_logger_controller
+
+Implements a finite state machine (FSM) with the following states:
+
+IDLE: Waiting for a command
+
+BUFFERING: Saving data to a FIFO
+
+WRITING: Writing to ReRAM memory
+
+FAIL_SAFE: Safe standby after a failure
+
+Signals:
+
+sensor_data: Data input
+
+fifo: FIFO buffer to prevent write loss
+
+done: Indicates that writing has finished
+
+fail_safe_mode: Failsafe mode activated if power fails
+buffer_fifo
+
+
+auto_awesome
+Quizás quisiste decir: Parametrizable circular FIFO.
+
+
+Parameterizable circular FIFO.
+
+Uses counters and pointers (wr_ptr, rd_ptr, count) to control writing and reading.
+
+Data width: 8 bits
+
+Depth: 16 elements
+re_ram_nvm
+
+Non-volatile RAM (simulated).
+
+8-bit addressing (256 positions).
+
+
+
+
+
+
+
+
+Simple read/write scheme.
+
+| Sign             | Description                        | IO Mapping |
+| ---------------- | -----------------------------------| --------------- |
+| `sensor_data`    | Digital sensor input (8 bits)      | `io_in[8:1]`    |
+| `re_ram_bus_in`  | External input bus                 | `io_in[16:9]`   |
+| `re_ram_bus_out` | Exit to external bus               | `io_out[24:17]` |
+| `re_ram_oeb`     | Bus address control                | `io_oeb[24:17]` |
+| `done_logging`   | End of writing signal              | `io_out[25]`    |
+| `fail_safe`      | Protection mode indicator          | `io_out[26]`    |
+
+Power Failure Handling
+
+At any time, if power_fail_detected is triggered:
+
+The current process is interrupted
+
+The system enters the FAIL_SAFE state
+
+Writes are stopped until a new reset
+Caravel/OpenLane Compatibility
+
+user_project_wrapper follows the format expected by Caravel:
+
+Integrates power pins (vccd1, vssd1)
+
+Uses Wishbone, IO, analog_io, la_data, irq
+
+Correctly resolves io_oeb values
+
+Some recent errors (missing user_clock2, rst) suggest:
+
+The DEF or template used is out of date with the current pins
+
+user_clock2 is not found, but it is not used in RTL → it can be ignored if not required
+Strengths
+
+• Clear, modular, and well-encapsulated architecture
+
+• Robust fault handling with FSM
+
+• Standard interface (Wishbone) is easy to control
+
+• Ready for integration with tapeout projects in Sky130
+
+• Limitations / Suggested Improvements
+
+• user_clock2 is not implemented (check info.yaml or user_project_wrapper template)
+
+• A read interface from ReRAM can be added
+
+• There is no control over the time between samples (sampling rate)
+
+• In FAIL_SAFE, a fallback to other memory or automatic shutdown could be implemented
+
+
+Test architecture in user_project_wrapper
++-----------------------------------------------------+
+|                     user_project_wrapper            |
+|                                                     |
+|  +------------------+       +-------------------+  |
+|  | logger_wb_controller |--->|  caravel_top     |  |
+|  |  (Interfaz Wishbone) |    |  (Top principal) |  |
+|  +------------------+       +-------------------+  |
+|           |                         |                |
+|           | start_logging ----------|                |
+|           |                         |                |
+|           |                         |                |
+|           |                         |                |
+|    Wishbone bus (wb_clk_i, etc.)   |                |
+|                                   |                |
+|   Sensor Data  (io_in[8:1])       |                |
+|   Power Fail   (input interno)    |                |
+|                                   |                |
+|                     +--------------------------+   |
+|                     |    secure_logger_controller | |
+|                     |    (Dentro de caravel_top)  | |
+|                     +--------------------------+   |
+|                               |                      |
+|                ReRAM signals: addr, we, data        |
+|                               |                      |
+|                    +---------------------+          |
+|                    |    re_ram_nvm        |          |
+|                    +---------------------+          |
+|                               |                      |
+|                  ReRAM data bus (io_out[24:17])     |
+|                                                     |
++-----------------------------------------------------+

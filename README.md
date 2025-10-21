@@ -45,26 +45,21 @@ Our design integrates **BM Labs ReRAM IP** within the **Caravel open-source SoC*
 
 ##  Architecture Overview
 
-+-----------------------------------------------------------+
-| user_project_wrapper |
-| +------------------------+ +---------------------+ |
-| | logger_wb_controller | ---> | caravel_top | |
-| +------------------------+ +---------------------+ |
-| | | |
-| +-----------------+ | |
-| | secure_logger |-------------------+ |
-| +-----------------+ |
-| +---------------+ |
-| | re_ram_nvm | |
-| +---------------+ |
-+-----------------------------------------------------------+
+   +-------------------------------+
+   |          Caravel SoC          |
+   |                               |
+   |   RISC-V CPU + Wishbone Bus   |
+   |        |           |          |
+   |        |     +-----------+    |
+   |        |     | ReRAM NVM |    |
+   |        |     +-----------+    |
+   |        |                      |
+   |  Secure Logger Controller     |
+   |        |                      |
+   |    GPIO / LA Interface        |
+   +-------------------------------+
 
-yaml
-Copiar código
 
- *Figure 1. Secure Logger Controller integrated into Caravel SoC using ReRAM NVM.*
-
----
 
 ##  Deliverables & Success Metrics
 
@@ -77,9 +72,9 @@ Copiar código
  **GDS-ready** layout for **SkyWater SKY130** tapeout.
 
 ### Success Metrics
-- 🔹 Functional simulation showing persistent data after power loss.  
-- 🔹 Verified ReRAM integration and correct Wishbone protocol operation.  
-- 🔹 Clean DRC/LVS results with **<1% area overhead** compared to base Caravel.
+- Functional simulation showing persistent data after power loss.  
+- Verified ReRAM integration and correct Wishbone protocol operation.  
+- Clean DRC/LVS results with **<1% area overhead** compared to base Caravel.
 
 ---
 
@@ -97,10 +92,9 @@ Semiconductor manufacturing and Artificial Intelligence — with a focus on **se
 
 ##  Next Steps
 
-1. Integrate block diagram figure(s) – suggested format: `docs/figures/block_diagram.png`  s
+1. Integrate block diagram figure(s) – suggested format: `docs/figures/block_diagram.png`  
 2. Include simulation waveform or FSM schematic once verified.  
 3. Finalize power/performance validation data.
 
----
+--
 
- *Developed as part of the Open Hardware initiative at Universidad Tecnológica de Nayarit.*

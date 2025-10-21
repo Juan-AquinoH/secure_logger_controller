@@ -45,20 +45,28 @@ Our design integrates **BM Labs ReRAM IP** within the **Caravel open-source SoC*
 
 ##  Architecture Overview
 
-   +-------------------------------+
-   |          Caravel SoC          |
-   |                               |
-   |   RISC-V CPU + Wishbone Bus   |
-   |        |           |          |
-   |        |     +-----------+    |
-   |        |     | ReRAM NVM |    |
-   |        |     +-----------+    |
-   |        |                      |
-   |  Secure Logger Controller     |
-   |        |                      |
-   |    GPIO / LA Interface        |
-   +-------------------------------+
+Descripción general de la arquitectura:
 
+         Entradas
++----------------+          +--------------------+          +----------------+
+|   Señales      |  ----->  |    SoC Caravel     |  ----->  |  Salidas       |
+|   GPIO / LA    |          +--------------------+          |  GPIO / LA     |
++----------------+                   |                       +----------------+
+                                     |
+             +-----------------------+----------------------+
+             |                                              |
+      +----------------+                             +----------------+
+      |    CPU RISC-V  | <------------------------> |   Bus Wishbone |
+      +----------------+                             +----------------+
+             |
+      +----------------+
+      |    NVM ReRAM   |
+      +----------------+
+             |
+      +-------------------------------+
+      | Controlador de registrador    |
+      | seguro (Secure Logger)        |
+      +-------------------------------+
 
 
 ##  Deliverables & Success Metrics

@@ -45,30 +45,58 @@ Our design integrates **BM Labs ReRAM IP** within the **Caravel open-source SoC*
 
 ##  Architecture Overview
 
-Descripción general de la arquitectura:
+Architecture Description
 
-         Entradas
-+----------------+          +--------------------+          +----------------+
-|   Señales      |  ----->  |    SoC Caravel     |  ----->  |  Salidas       |
-|   GPIO / LA    |          +--------------------+          |  GPIO / LA     |
-+----------------+                   |                       +----------------+
-                                     |
-             +-----------------------+----------------------+
-             |                                              |
-      +----------------+                             +----------------+
-      |    CPU RISC-V  | <------------------------> |   Bus Wishbone |
-      +----------------+                             +----------------+
-             |
-      +----------------+
-      |    NVM ReRAM   |
-      +----------------+
-             |
-      +-------------------------------+
-      | Controlador de registrador    |
-      | seguro (Secure Logger)        |
-      +-------------------------------+
+The Secure Logger SoC architecture is based on the Caravel platform and is designed for low-power embedded systems that require secure event logging in non-volatile memory. It is composed of several interconnected modules that enable secure data capture, storage, and reading even in the event of power interruptions.
 
+1. Inputs
 
+GPIO / Logic Analyzer (LA) Signals:
+These enable the SoC to communicate with external devices and monitor internal signals.
+They serve as an input interface for commands, sensor data, or event triggers.
+
+2. Core Modules
+RISC-V CPU
+
+Main processing core that executes instructions from the RV32I suite (and optionally RV32M for multiplication/division operations).
+
+Controls data flow between peripherals, memory, and the secure logger controller.
+
+Wishbone Bus
+
+Interconnects all SoC modules (CPU, NVM, logging controller).
+
+Facilitates efficient communication between modules and enables consistent access to memory or peripherals.
+
+NVM ReRAM
+
+Highly energy-efficient non-volatile memory.
+
+Persistently stores critical events even during power outages.
+
+Ensures data integrity and recovery after unexpected reboots.
+Secure Logger Controller
+
+The SoC's central module ensures the security and consistency of logs.
+
+Manages the writing and reading of data in ReRAM.
+
+Implements protection mechanisms against data corruption or unauthorized access.
+
+3. Outputs
+
+GPIO/LA Signals:
+Outputs for sending processed information or logged events to external systems, actuators, or monitoring interfaces.
+
+4. Data Flow
+
+The input signals (GPIO/LA) are captured by the RISC-V CPU.
+
+The CPU processes the information and, if necessary, writes it to NVM ReRAM via the Secure Logger.
+
+The Wishbone Bus facilitates communication between all internal modules.
+
+Finally, processed data or critical events can be sent through the GPIO/LA outputs.
 ##  Deliverables & Success Metrics
 
 ### Deliverables
